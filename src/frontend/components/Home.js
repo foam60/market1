@@ -39,6 +39,11 @@ const Home = ({ marketplace, nft }) => {
     loadMarketplaceItems()
   }
 
+  const sellMarketItem = async (addressNFT,item, price) => {
+    await (await marketplace.sellItem(addressNFT, item.itemId, price)).wait()
+    loadMarketplaceItems()
+  }
+
   useEffect(() => {
     loadMarketplaceItems()
   }, [])

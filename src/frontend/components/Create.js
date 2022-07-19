@@ -22,6 +22,7 @@ const Create = ({ marketplace, nft }) => {
       }
     }
   }
+
   const createNFT = async () => {
     if (!image || !price || !name || !description) return
     try{
@@ -31,6 +32,7 @@ const Create = ({ marketplace, nft }) => {
       console.log("ipfs uri upload error: ", error)
     }
   }
+  
   const mintThenList = async (result) => {
     const uri = `https://ipfs.infura.io/ipfs/${result.path}`
     // mint nft 

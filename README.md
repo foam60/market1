@@ -30,8 +30,8 @@ $ npx hardhat node
 `npx hardhat run src/backend/scripts/deploy.js --network localhost`
 
 ### 6. Run Tests
-`$ npx hardhat test`
+`npx hardhat test`
 
 ### 7. Launch Frontend
-`$ npm run start`
+`npm run start`
 
