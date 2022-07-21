@@ -8,6 +8,7 @@ const Create = ({ marketplace, nft }) => {
   const [image, setImage] = useState('')
   const [price, setPrice] = useState(null)
   const [name, setName] = useState('')
+  const [endTime, setEndTime] = useState(0)
   const [description, setDescription] = useState('')
   const uploadToIPFS = async (event) => {
     event.preventDefault()
@@ -32,6 +33,17 @@ const Create = ({ marketplace, nft }) => {
       console.log("ipfs uri upload error: ", error)
     }
   }
+
+
+  const createNFTAuction = async () => {
+    if (!image || !price || !name || !description) return
+    try{
+      const result = await client.add(JSON.stringify({image, price, name, description}))
+      mintThenListAuction(result)
+    } catch(error) {
+      console.log("ipfs uri upload error: ", error)
+    }
+  }
   
   const mintThenList = async (result) => {
     const uri = `https://ipfs.infura.io/ipfs/${result.path}`
@@ -45,6 +57,20 @@ const Create = ({ marketplace, nft }) => {
     const listingPrice = ethers.utils.parseEther(price.toString())
     await(await marketplace.makeItem(nft.address, id, listingPrice)).wait()
   }
+
+  const mintThenListAuction = async (result) => {
+    const uri = `https://ipfs.infura.io/ipfs/${result.path}`
+    // mint nft 
+    await(await nft.mint(uri)).wait()
+    // get tokenId of new nft 
+    const id = await nft.tokenCount()
+    // approve marketplace to spend nft
+    await(await nft.setApprovalForAll(marketplace.address, true)).wait()
+    // add nft to marketplace
+    const listingPrice = ethers.utils.parseEther(price.toString())
+    await(await marketplace.makeItemAuction(nft.address, id, listingPrice, endTime)).wait()
+  }
+
   return (
     <div className="container-fluid mt-5">
       <div className="row">
@@ -60,9 +86,33 @@ const Create = ({ marketplace, nft }) => {
               <Form.Control onChange={(e) => setName(e.target.value)} size="lg" required type="text" placeholder="Name" />
               <Form.Control onChange={(e) => setDescription(e.target.value)} size="lg" required as="textarea" placeholder="Description" />
               <Form.Control onChange={(e) => setPrice(e.target.value)} size="lg" required type="number" placeholder="Price in ETH" />
+              
               <div className="d-grid px-0">
                 <Button onClick={createNFT} variant="primary" size="lg">
-                  Create & List NFT!
+                  Create & List NFT !
+                </Button>
+              </div>
+            </Row>
+          </div>
+        </main>
+      </div>
+      <div className="row">
+        <main role="main" className="col-lg-12 mx-auto" style={{ maxWidth: '1000px' }}>
+          <div className="content mx-auto">
+            <Row className="g-4">
+              <Form.Control
+                type="file"
+                required
+                name="file"
+                onChange={uploadToIPFS}
+              />
+              <Form.Control onChange={(e) => setName(e.target.value)} size="lg" required type="text" placeholder="Name" />
+              <Form.Control onChange={(e) => setDescription(e.target.value)} size="lg" required as="textarea" placeholder="Description" />
+              <Form.Control onChange={(e) => setPrice(e.target.value)} size="lg" required type="number" placeholder="Price in ETH" />
+              <Form.Control onChange={(e) => setEndTime(e.target.value)} size="lg" required type="number" placeholder="End Time Auction" />
+              <div className="d-grid px-0">
+                <Button onClick={createNFTAuction} variant="primary" size="lg">
+                  Create & List NFT on Auction !
                 </Button>
               </div>
             </Row>
@@ -70,6 +120,7 @@ const Create = ({ marketplace, nft }) => {
         </main>
       </div>
     </div>
+    
   );
 }
 
