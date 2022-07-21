@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 contract NFT is ERC721URIStorage {
 
     uint public tokenCount;
+    mapping(address => uint256[]) wallet;
 
     constructor() ERC721("DApp NFT", "DAPP"){}
     

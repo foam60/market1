@@ -23,8 +23,52 @@ contract Marketplace is ReentrancyGuard {
         bool sold;
     }
 
+    struct Auction {
+        uint256 id;
+        bool start;
+        bool end;
+        uint256 endAt;
+        address[] bidders;
+        address payable highestBidder;
+        uint256 highestBid;
+        address payable seller;
+        uint256 itemId;
+    }
+
     // itemId -> Item
     mapping(uint => Item) public items;
+    mapping(address => Item) private purchased;
+    mapping(address => uint256[]) wallet;
+
+
+    // ------------- Events ------------
+    event AuctionCreated(
+        uint256 indexed acutionId,
+        uint256 indexed nftId,
+        address indexed seller,
+        uint256 endAt,
+        uint256 price
+    );
+    event Bid(
+        uint256 indexed auctionId,
+        address indexed bidder,
+        uint256 indexed nftId,
+        uint256 bid
+    );
+    event AuctionEnded(
+        uint256 indexed auctionId,
+        address indexed bidder,
+        uint256 indexed nftId,
+        uint256 price
+    );
+
+    // event WihdrawSuccess(address indexed seller, uint256 balance);
+
+    event AuctionCanceled(
+        uint256 indexed auctionId,
+        address indexed seller,
+        uint256 indexed itemId
+    );
 
     event Offered(
         uint itemId,
@@ -52,6 +96,7 @@ contract Marketplace is ReentrancyGuard {
         require(_price > 0, "Price must be greater than zero");
         // increment itemCount
         itemCount ++;
+        wallet[msg.sender].push(itemCount);
         // transfer nft
         _nft.transferFrom(msg.sender, address(this), _tokenId);
         // add new item to items mapping
@@ -73,6 +118,59 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
+    // Make item to offer on the marketplace
+    function makeItemAuction(IERC721 _nft, uint _tokenId, uint _price) external nonReentrant {
+        require(_price > 0, "Price must be greater than zero");
+        // increment itemCount
+        itemCount ++;
+        // transfer nft
+        _nft.transferFrom(msg.sender, address(this), _tokenId);
+        // add new item to items mapping
+        items[itemCount] = Item (
+            itemCount,
+            _nft,
+            _tokenId,
+            _price,
+            payable(msg.sender),
+            false
+        );
+        // emit Offered event
+        emit Offered(
+            itemCount,
+            address(_nft),
+            _tokenId,
+            _price,
+            msg.sender
+        );
+    }
+
+    // Make item to offer on the marketplace
+    function sellItem(IERC721 _nft, uint _tokenId, uint _price) external nonReentrant {
+        require(_price > 0, "Price must be greater than zero");
+        // increment itemCount
+        itemCount ++;
+        wallet[msg.sender].push(itemCount);
+        // transfer nft
+        _nft.transferFrom(msg.sender, address(this), _tokenId);
+        // add new item to items mapping
+        items[itemCount] = Item (
+            itemCount,
+            _nft,
+            _tokenId,
+            _price,
+            payable(msg.sender),
+            false
+        );
+        // emit Offered event
+        // emit Offered(
+        //     itemCount,
+        //     address(_nft),
+        //     _tokenId,
+        //     _price,
+        //     msg.sender
+        // );
+    }
+
     function purchaseItem(uint _itemId) external payable nonReentrant {
         uint _totalPrice = getTotalPrice(_itemId);
         Item storage item = items[_itemId];
@@ -86,6 +184,7 @@ contract Marketplace is ReentrancyGuard {
         item.sold = true;
         // transfer nft to buyer
         item.nft.transferFrom(address(this), msg.sender, item.tokenId);
+        wallet[msg.sender].push(item.tokenId);
         // emit Bought event
         emit Bought(
             _itemId,
@@ -96,7 +195,16 @@ contract Marketplace is ReentrancyGuard {
             msg.sender
         );
     }
+
     function getTotalPrice(uint _itemId) view public returns(uint){
         return((items[_itemId].price*(100 + feePercent))/100);
+    }
+
+    function getWallet(address user) view public returns(uint[] memory){
+        return(wallet[user]);
+    }
+
+    function getPurchased(address user) view public returns(Item memory){
+        return(purchased[user]);
     }
 }

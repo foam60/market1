@@ -1,14 +1,12 @@
-# NFT Marketplace
+# NFT Marketplace Annual Project ESGI
 
 ## Technology Stack & Tools
-
 - Solidity (Writing Smart Contract)
 - Javascript (React & Testing)
 - [Ethers](https://docs.ethers.io/v5/) (Blockchain Interaction)
 - [Hardhat](https://hardhat.org/) (Development Framework)
 - [Ipfs](https://ipfs.io/) (Metadata storage)
 - [React routers](https://v5.reactrouter.com/) (Navigational components)
-
 
 ## Setting Up
 ### 1. Clone/Download the Repository
@@ -20,7 +18,6 @@ $ npm install
 ```
 ### 3. Boot up local development blockchain
 ```
-$ cd nft_marketplace
 $ npx hardhat node
 ```
 
